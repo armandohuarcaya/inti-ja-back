@@ -88,4 +88,17 @@ class FiltersComunController
             return $this->error(Helpers::msgError($e), 400);
         }
     }
+    public function getEquipe(Request $request)
+    {
+        try {
+            $data = FiltersComunData::getEquipe($request);
+            if (count($data)>0) {
+                return $this->ok($data);
+            } else {
+                return $this->information('', 'No hay información', 202);
+            }
+        } catch (Throwable $e) {
+            return $this->error(Helpers::msgError($e), 400);
+        }
+    }
 }

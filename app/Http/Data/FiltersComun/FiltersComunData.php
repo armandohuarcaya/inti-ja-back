@@ -58,4 +58,16 @@ class FiltersComunData
         $data = $q->get();
         return $data;
     }
+    public static function getEquipe($request)
+    {
+        $id_periodo = $request->id_periodo;
+        $id_iglesia = $request->id_iglesia;
+        $q = DB::table('inti_equipos as a');
+        $q->select('*');
+        $q->where('a.id_periodo', '=', $id_periodo);
+        $q->where('a.id_iglesia', '=', $id_iglesia);
+        $q->orderBy('a.id_equipo', 'asc');
+        $data = $q->get();
+        return $data;
+    }
 }

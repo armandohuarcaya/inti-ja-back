@@ -188,4 +188,42 @@ class IntipazController
             return $this->error(Helpers::msgError($e), 400);
         }
     }
+    public function saveGroup(Request $request)
+    {
+        $date = Carbon::now();
+        $fecha_reg = $date->format('Y-m-d H:m:s');
+        DB::beginTransaction();
+        try {
+            $result = IntipazData::saveGroup($request, $fecha_reg);
+            if($result['success']) {
+                DB::commit();
+                return $this->ok($result['data'], $result['message']);
+            }else{
+                DB::rollBack();
+                return $this->information('', $result['message'], 202);
+            }
+        } catch (Throwable $e) {
+            DB::rollBack();
+            return $this->error(Helpers::msgError($e), 400);
+        }
+    }
+    public function saveGroupsEquipe(Request $request)
+    {
+        $date = Carbon::now();
+        $fecha_reg = $date->format('Y-m-d H:m:s');
+        DB::beginTransaction();
+        try {
+            $result = IntipazData::saveGroupsEquipe($request, $fecha_reg);
+            if($result['success']) {
+                DB::commit();
+                return $this->ok($result['data'], $result['message']);
+            }else{
+                DB::rollBack();
+                return $this->information('', $result['message'], 202);
+            }
+        } catch (Throwable $e) {
+            DB::rollBack();
+            return $this->error(Helpers::msgError($e), 400);
+        }
+    }
 }
