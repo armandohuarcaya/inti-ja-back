@@ -31,7 +31,7 @@ class IntipazData
         $q->join('inti_diciplinas as e', 'a.id_diciplina', '=', 'e.id_diciplina');
         $q->select('a.id_grupo_equipo', 'a.id_equipo', 'a.id_grupo', 'a.id_categoria', 'a.id_diciplina', 'b.nombre as equipo', 'b.logo', 'c.nombre as grupo',
         'd.nombre as categoria', 'd.codigo as codigo_categoria', 'e.codigo as codigo_diciplina', 'e.nombre as diciplina',
-        DB::raw("CONCAT(c.nombre,' - ',d.nombre) as grupo_categoria"));
+        DB::raw("CONCAT(c.nombre,' - ',d.nombre,' - ',a.id_grupo,' - ',a.id_categoria) as grupo_categoria"));
         $q->where('a.id_periodo', '=', $id_periodo);
         $q->where('a.id_diciplina', '=', $id_diciplina);
         if (!empty($id_categoria)) {
@@ -46,7 +46,7 @@ class IntipazData
         $datar = array();
         foreach ($da as $key => $value) {
             $separa = explode(" - ", $key);
-            array_push($datar, ['grupo_categoria' => $key, 'categoria' => $separa[1], 'data' => $value]);
+            array_push($datar, ['grupo_categoria' => $separa[0].' - '.$separa[1], 'categoria' => $separa[1], 'id_grupo' => $separa[2], 'id_categoria' => $separa[3], 'data' => $value]);
         }
         return $datar;
     }
@@ -443,4 +443,116 @@ class IntipazData
         
         return $response;
     }
+    public static function saveGroup($request, $fecha_reg)
+    {
+        $id_periodo = $request->id_periodo;
+        $nombre = $request->nombre;
+        $estado = $request->estado;
+
+        $id_grupo =  Helpers::correlativo('inti_grupos', 'id_grupo');
+
+        if ($id_grupo) {
+            $save = DB::table('inti_grupos')->insert([
+                'id_grupo' => $id_grupo,
+                'id_periodo' => $id_periodo,
+                'nombre' => $nombre,
+                'estado' => $estado,
+                'created_at' => $fecha_reg,
+            ]);
+            if ($save) {
+                $response = [
+                    'success' => true,
+                    'message' => 'Ingresado satisfactoriamente',
+                    'data' => $save
+                ];
+            } else {
+                $response = [
+                    'success' => false,
+                    'message' => 'No se pudo registrar por completo',
+                    'data' => $save
+                ];
+            }
+
+        } else {
+            $response = [
+                'success' => false,
+                'message' => 'No se encontro correlativo',
+                'data' => ''
+            ];
+        }
+        
+        return $response;
+    }
+    public static function saveGroupsEquipe($request, $fecha_reg)
+    {
+        $id_periodo = $request->id_periodo;
+        $id_grupo = $request->id_grupo;
+        $id_categoria = $request->id_categoria;
+        $id_diciplina = $request->id_diciplina;
+
+        $array_equipo = $request->array_equipo;
+
+        $data = array();
+        $id_grupo_equipo =  Helpers::correlativo('inti_grupo_equipo', 'id_grupo_equipo');
+        foreach ($array_equipo as $value) {
+            $item = (object)$value;
+            $item = [
+                'id_grupo_equipo' => $id_grupo_equipo,
+                'id_grupo' => $id_grupo,
+                'id_equipo' => $item->id_equipo,
+                'id_categoria' => $id_categoria,
+                'id_diciplina' => $id_diciplina,
+                'id_periodo' => $id_periodo,
+                'partido_jugado' => 0,
+                'ganado' => 0,
+                'empate' => 0,
+                'perdido' => 0,
+                'goles_favor' => 0,
+                'goles_contra' => 0,
+                'diferencia_goles' => 0,
+                'puntos' => 0,
+                'created_at' => $fecha_reg,
+            ];
+            array_push($data, $item);
+            $id_grupo_equipo = $id_grupo_equipo + 1;
+        }
+
+        
+        $savegp = DB::table('inti_grupo_equipo')->insert($data);
+        if ($savegp) {
+            $response = [
+                'success' => true,
+                'message' => 'Ingresado satisfactoriamente',
+                'data' => $savegp
+            ];
+        } else {
+            $response = [
+                'success' => false,
+                'message' => 'No se pudo registrar por completo',
+                'data' => $savegp
+            ];
+        }
+        
+        return $response;
+    }
+    // public static function deleteEquipeGrups($request, $id_grupo_equipo)
+    // {
+    //     $delete = DB::table('inti_grupo_equipo')->where('id_grupo_equipo', '=', $id_grupo_equipo)->delete();
+ 
+    //     if ($delete) {
+    //         $response = [
+    //             'success' => true,
+    //             'message' => 'Eliminado satisfactoriamente',
+    //             'data' => $delete
+    //         ];
+            
+    //     } else {
+    //         $response = [
+    //             'success' => false,
+    //             'message' => 'No se pudo eliminar',
+    //             'data' => $delete
+    //         ];
+    //     }
+    //     return $response;
+    // }
 }
