@@ -26,6 +26,8 @@ trait TraitSettingsRoutes
             Route::put('start-partities/{id_partido}', [IntipazController::class, 'startPartities']);
             Route::put('result-partities/{id_partido_detalle}', [IntipazController::class, 'updateResultadoPartities']);
             Route::put('finish-partities/{id_partido}', [IntipazController::class, 'finishPartities']);
+            Route::post('groups', [IntipazController::class, 'saveGroup']);
+            Route::post('group-equipe', [IntipazController::class, 'saveGroupsEquipe']);
         });
     }
 }

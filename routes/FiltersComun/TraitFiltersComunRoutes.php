@@ -20,6 +20,7 @@ trait TraitFiltersComunRoutes
             Route::get('fases', [FiltersComunController::class, 'getFase']);
             Route::get('groups', [FiltersComunController::class, 'getGroup']);
             Route::get('periodos', [FiltersComunController::class, 'getPeriodo']);
+            Route::get('equipes', [FiltersComunController::class, 'getEquipe']);
         });
     }
 }
