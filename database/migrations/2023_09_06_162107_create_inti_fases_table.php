@@ -15,6 +15,7 @@ return new class extends Migration
             $table->integer('id_fase')->primary();
             $table->string('nombre', 100)->nullable();
             $table->string('codigo', 5)->nullable();
+            $table->integer('id_periodo');
             $table->char('activo', 1)->nullable()->default('N');
             $table->char('estado', 1)->nullable()->default(1);
             $table->timestamps();
