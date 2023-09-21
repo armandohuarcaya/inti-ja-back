@@ -25,8 +25,11 @@ class FiltersComunData
     }
     public static function getFase($request)
     {
+        $id_periodo = $request->id_periodo;
+
         $q = DB::table('inti_fases as a');
         $q->select('*');
+        $q->where('a.id_periodo', '=', $id_periodo);
         $q->orderBy('a.id_fase', 'asc');
         $data = $q->get();
         return $data;
