@@ -51,18 +51,21 @@ jobs:
           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
 
-      - name: Clear directory www
-        run: ssh staging 'rm -rf /home/${{ secrets.SSH_USER }}/docker/php/www/*'
-      
-      - name: rsync deploy
-        uses: burnett01/rsync-deployments@5.2.1
-        with:
-          switches: -ravz --delete
-          path: "./"
-          remote_path: /home/${{ secrets.SSH_USER }}/docker/php/www
-          remote_host: ${{ secrets.SSH_HOST }}
-          remote_user: ${{ secrets.SSH_USER }}
-          remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Deploy app
+        uses: up9cloud/action-rsync@master
+        env:
+          HOST: ${{secrets.SSH_HOST}}
+          KEY: ${{secrets.SSH_PRIVATE_KEY}}
+          USER: ${{secrets.SSH_USER}}
+          ARGS: -ravz --exclude=/.git/ --exclude=/.github/
+          SOURCE: ./
+          TARGET: /home/${{ secrets.SSH_USER }}/docker/php/www
+          VERBOSE: true
+          POST_SCRIPT: |
+            docker exec -t php php artisan cache:clear        
+            cd /home/${{ secrets.SSH_USER }}/docker/php/www
+            chmod -R 777 storage
+            chmod -R 777 bootstrap/cache
 
       - name: Verify that the service has been restarted
-        run: ssh staging 'sleep 30 && curl --fail http://localhost:8080/ || exit 1' # Si la petición falla, el paso de verificación falla
+        run: ssh staging 'sleep 30 && curl --fail -I http://localhost:8080 || exit 1' # Si la petición falla, el paso de verificación falla
