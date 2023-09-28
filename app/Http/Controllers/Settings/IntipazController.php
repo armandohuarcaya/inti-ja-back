@@ -177,14 +177,18 @@ class IntipazController
     {
         $date = Carbon::now();
         $fecha_reg = $date->format('Y-m-d H:m:s');
+        DB::beginTransaction();
         try {
             $result = IntipazData::finishPartities($request, $id_partido, $fecha_reg);
             if($result['success']) {
+                DB::commit();
                 return $this->ok($result['data'], $result['message']);
             }else{
+                DB::rollBack();
                 return $this->information('', $result['message'], 202);
             }
         } catch (Throwable $e) {
+            DB::rollBack();
             return $this->error(Helpers::msgError($e), 400);
         }
     }
