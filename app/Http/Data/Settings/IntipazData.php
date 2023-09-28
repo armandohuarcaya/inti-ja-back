@@ -343,102 +343,128 @@ class IntipazData
     public static function finishPartities($request, $id_partido, $fecha_reg)
     {
         $finalizado = $request->finalizado;
+        $id_fase = $request->id_fase;
 
-        $update = DB::table('inti_partidos')->where('id_partido', '=', $id_partido)->update([
-            'finalizado' => $finalizado,
-            'updated_at' => $fecha_reg
-        ]);
-        if ($update) {
+        $fase = DB::table('inti_fases')->where('id_fase', '=', $id_fase)->select('codigo')->first();
 
-            $response = [
-                'success' => true,
-                'message' => 'Actualizado',
-                'data' => $update
-            ];
-
-            $detalle = DB::table('inti_partidos_detalle')
-            ->select('id_partido_detalle', 'resultado', 'id_grupo_equipo')
-            ->where('id_partido', '=', $id_partido)
-            ->get();
-
-            if ($detalle[0]->resultado > $detalle[1]->resultado) {
-                $mejorJugador = $detalle[0];
-            } elseif ($detalle[1]->resultado > $detalle[0]->resultado) {
-                $mejorJugador = $detalle[1];
+        
+        if ($fase->codigo == 'FDGPS') { //Fase de grupos
+            $update = DB::table('inti_partidos')->where('id_partido', '=', $id_partido)->update([
+                'finalizado' => $finalizado,
+                'updated_at' => $fecha_reg
+            ]);
+            if ($update) {
+    
+                $response = [
+                    'success' => true,
+                    'message' => 'Actualizado, para la fase de grupos',
+                    'data' => $update
+                ];
+    
+                $detalle = DB::table('inti_partidos_detalle')
+                ->select('id_partido_detalle', 'resultado', 'id_grupo_equipo')
+                ->where('id_partido', '=', $id_partido)
+                ->get();
+    
+                if ($detalle[0]->resultado > $detalle[1]->resultado) {
+                    $mejorJugador = $detalle[0];
+                } elseif ($detalle[1]->resultado > $detalle[0]->resultado) {
+                    $mejorJugador = $detalle[1];
+                } else {
+                    $mejorJugador = null; // Empate
+                }
+    
+                if (!empty($mejorJugador)) {
+                    $updateDetalle = DB::table('inti_partidos_detalle')->where('id_partido_detalle', '=', $mejorJugador->id_partido_detalle)->update([
+                        'gano' => 'S',
+                        'updated_at' => $fecha_reg
+                    ]);
+                }
+    
+                foreach ($detalle as $value) {
+                    $item = (Object)$value;
+    
+                    $datos = DB::table('inti_grupo_equipo')->where('id_grupo_equipo', '=', $item->id_grupo_equipo)
+                    ->select('partido_jugado', 'ganado', 'empate', 'perdido', 'goles_favor', 'goles_contra', 'diferencia_goles', 'puntos')->first();
+    
+                    // if (empty($mejorJugador)) {
+                    //     $puntos = ((int)$datos->puntos + 1);
+                    // } elseif (!empty($mejorJugador) and ($item->id_grupo_equipo == $mejorJugador->id_grupo_equipo)) {
+                    //     $puntos = ((int)$datos->puntos + 3);
+                    // } else {
+                    //     $puntos = ((int)$datos->puntos);
+                    // }
+                    
+                    $tabla = DB::table('inti_grupo_equipo')->where('id_grupo_equipo', '=', $item->id_grupo_equipo)->update([
+                        'partido_jugado' => (int)$datos->partido_jugado + 1,
+                        'ganado' => (!empty($mejorJugador) and ($item->id_grupo_equipo == $mejorJugador->id_grupo_equipo)) ? ((int)$datos->ganado + 1) : (int)$datos->ganado,
+                        'empate' => empty($mejorJugador) ? ((int)$datos->empate + 1) : (int)$datos->empate,
+                        'perdido' => (!empty($mejorJugador) and ($item->id_grupo_equipo != $mejorJugador->id_grupo_equipo)) ? ((int)$datos->perdido + 1) : (int)$datos->perdido,
+                        'goles_favor' => ((int)$datos->goles_favor + (int)$item->resultado),
+                        'goles_contra' => ((int)$datos->goles_contra + ((!empty($mejorJugador) and ($item->id_grupo_equipo != $mejorJugador->id_grupo_equipo)) ? (int)$mejorJugador->resultado : 0)),
+                        'diferencia_goles' => (int)$datos->goles_favor - (!empty($mejorJugador) and ($item->id_grupo_equipo != $mejorJugador->id_grupo_equipo)) ? (int)$mejorJugador->resultado : 0,
+                        // 'puntos' => $puntos,
+                        'updated_at' => $fecha_reg
+                    ]);
+    
+                    $datoDos = DB::table('inti_grupo_equipo')->where('id_grupo_equipo', '=', $item->id_grupo_equipo)
+                    ->select('partido_jugado', 'ganado', 'empate', 'perdido', 'goles_favor', 'goles_contra', 'diferencia_goles', 'puntos')->first();
+    
+                    $puntos = ((int)$datoDos->ganado * 3) + ((int)$datoDos->empate * 1) + ((int)$datoDos->perdido * 0);
+    
+                    $tablaDos = DB::table('inti_grupo_equipo')->where('id_grupo_equipo', '=', $item->id_grupo_equipo)->update([
+                        'diferencia_goles' => ((int)$datoDos->goles_favor - (int)$datoDos->goles_contra),
+                        'puntos' => $puntos,
+                        'updated_at' => $fecha_reg
+                    ]);
+    
+                    if (!empty($mejorJugador) and ($mejorJugador->id_partido_detalle == $item->id_partido_detalle)) {
+                        $partido = 'G';
+                    }
+                    if (!empty($mejorJugador) and ($mejorJugador->id_partido_detalle != $item->id_partido_detalle)) {
+                        $partido = 'P';
+                    }
+                    if (empty($mejorJugador)) {
+                        $partido = 'E';
+                    }
+                    $id_partido_detalle_monitor =  Helpers::correlativo('inti_partidos_detalle_monitor', 'id_partido_detalle_monitor');
+                    $monitor = DB::table('inti_partidos_detalle_monitor')->insert([
+                        'id_partido_detalle_monitor' => $id_partido_detalle_monitor,
+                        'id_partido_detalle' => $item->id_partido_detalle,
+                        'id_grupo_equipo' => $item->id_grupo_equipo,
+                        'partido' => $partido,
+                        'created_at' => $fecha_reg
+                    ]);
+                }
+    
+    
             } else {
-                $mejorJugador = null; // Empate
+                $response = [
+                    'success' => false,
+                    'message' => 'No se pudo actualizar',
+                    'data' => $update
+                ];
             }
-
-            if (!empty($mejorJugador)) {
-                $updateDetalle = DB::table('inti_partidos_detalle')->where('id_partido_detalle', '=', $mejorJugador->id_partido_detalle)->update([
-                    'gano' => 'S',
-                    'updated_at' => $fecha_reg
-                ]);
-            }
-
-            foreach ($detalle as $value) {
-                $item = (Object)$value;
-
-                $datos = DB::table('inti_grupo_equipo')->where('id_grupo_equipo', '=', $item->id_grupo_equipo)
-                ->select('partido_jugado', 'ganado', 'empate', 'perdido', 'goles_favor', 'goles_contra', 'diferencia_goles', 'puntos')->first();
-
-                // if (empty($mejorJugador)) {
-                //     $puntos = ((int)$datos->puntos + 1);
-                // } elseif (!empty($mejorJugador) and ($item->id_grupo_equipo == $mejorJugador->id_grupo_equipo)) {
-                //     $puntos = ((int)$datos->puntos + 3);
-                // } else {
-                //     $puntos = ((int)$datos->puntos);
-                // }
-                
-                $tabla = DB::table('inti_grupo_equipo')->where('id_grupo_equipo', '=', $item->id_grupo_equipo)->update([
-                    'partido_jugado' => (int)$datos->partido_jugado + 1,
-                    'ganado' => (!empty($mejorJugador) and ($item->id_grupo_equipo == $mejorJugador->id_grupo_equipo)) ? ((int)$datos->ganado + 1) : (int)$datos->ganado,
-                    'empate' => empty($mejorJugador) ? ((int)$datos->empate + 1) : (int)$datos->empate,
-                    'perdido' => (!empty($mejorJugador) and ($item->id_grupo_equipo != $mejorJugador->id_grupo_equipo)) ? ((int)$datos->perdido + 1) : (int)$datos->perdido,
-                    'goles_favor' => ((int)$datos->goles_favor + (int)$item->resultado),
-                    'goles_contra' => ((int)$datos->goles_contra + ((!empty($mejorJugador) and ($item->id_grupo_equipo != $mejorJugador->id_grupo_equipo)) ? (int)$mejorJugador->resultado : 0)),
-                    'diferencia_goles' => (int)$datos->goles_favor - (!empty($mejorJugador) and ($item->id_grupo_equipo != $mejorJugador->id_grupo_equipo)) ? (int)$mejorJugador->resultado : 0,
-                    // 'puntos' => $puntos,
-                    'updated_at' => $fecha_reg
-                ]);
-
-                $datoDos = DB::table('inti_grupo_equipo')->where('id_grupo_equipo', '=', $item->id_grupo_equipo)
-                ->select('partido_jugado', 'ganado', 'empate', 'perdido', 'goles_favor', 'goles_contra', 'diferencia_goles', 'puntos')->first();
-
-                $puntos = ((int)$datoDos->ganado * 3) + ((int)$datoDos->empate * 1) + ((int)$datoDos->perdido * 0);
-
-                $tablaDos = DB::table('inti_grupo_equipo')->where('id_grupo_equipo', '=', $item->id_grupo_equipo)->update([
-                    'diferencia_goles' => ((int)$datoDos->goles_favor - (int)$datoDos->goles_contra),
-                    'puntos' => $puntos,
-                    'updated_at' => $fecha_reg
-                ]);
-
-                if (!empty($mejorJugador) and ($mejorJugador->id_partido_detalle == $item->id_partido_detalle)) {
-                    $partido = 'G';
-                }
-                if (!empty($mejorJugador) and ($mejorJugador->id_partido_detalle != $item->id_partido_detalle)) {
-                    $partido = 'P';
-                }
-                if (empty($mejorJugador)) {
-                    $partido = 'E';
-                }
-                $id_partido_detalle_monitor =  Helpers::correlativo('inti_partidos_detalle_monitor', 'id_partido_detalle_monitor');
-                $monitor = DB::table('inti_partidos_detalle_monitor')->insert([
-                    'id_partido_detalle_monitor' => $id_partido_detalle_monitor,
-                    'id_partido_detalle' => $item->id_partido_detalle,
-                    'id_grupo_equipo' => $item->id_grupo_equipo,
-                    'partido' => $partido,
-                    'created_at' => $fecha_reg
-                ]);
-            }
-
-
         } else {
-            $response = [
-                'success' => false,
-                'message' => 'No se pudo actualizar',
-                'data' => $update
-            ];
+            $update = DB::table('inti_partidos')->where('id_partido', '=', $id_partido)->update([
+                'finalizado' => $finalizado,
+                'updated_at' => $fecha_reg
+            ]);
+
+            if($update) {
+                $response = [
+                    'success' => true,
+                    'message' => 'Actualizado, para otras fases',
+                    'data' => $update
+                ];
+    
+            } else {
+                $response = [
+                    'success' => false,
+                    'message' => 'No se pudo actualizar',
+                    'data' => $update
+                ];
+            }
         }
         
         return $response;
