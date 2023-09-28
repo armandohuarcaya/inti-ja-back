@@ -107,8 +107,9 @@ class IntipazData
         $q->leftJoin('inti_grupos as c', 'a.id_grupo', '=', 'c.id_grupo');
         $q->leftJoin('inti_categorias as d', 'a.id_categoria', '=', 'd.id_categoria');
         $q->leftJoin('inti_diciplinas as e', 'a.id_diciplina', '=', 'e.id_diciplina');
+        $q->leftJoin('inti_fases as f', 'a.id_fase', '=', 'f.id_fase');
         $q->select('a.id_partido', 'a.fecha', 'a.hora_inicio', 'a.hora_fin', 'a.resultado', 'a.id_periodo', 'a.finalizado', 'a.id_fase', 'a.id_grupo', 
-        'a.id_categoria', 'a.id_diciplina', 'a.orden', 'c.nombre as grupo', 'd.nombre as categoria','e.nombre as diciplina');
+        'a.id_categoria', 'a.id_diciplina', 'a.orden', 'c.nombre as grupo', 'd.nombre as categoria','e.nombre as diciplina', 'f.nombre as fase');
         $q->where('a.id_periodo', '=', $id_periodo);
         if (!empty($id_diciplina)) {
             $q->where('a.id_diciplina', '=', $id_diciplina);
