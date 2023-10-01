@@ -402,8 +402,8 @@ class IntipazData
                         'empate' => empty($mejorJugador) ? ((int)$datos->empate + 1) : (int)$datos->empate,
                         'perdido' => (!empty($mejorJugador) and ($item->id_grupo_equipo != $mejorJugador->id_grupo_equipo)) ? ((int)$datos->perdido + 1) : (int)$datos->perdido,
                         'goles_favor' => ((int)$datos->goles_favor + (int)$item->resultado),
-                        'goles_contra' => ((int)$datos->goles_contra + ((!empty($mejorJugador) and ($item->id_grupo_equipo != $mejorJugador->id_grupo_equipo)) ? (int)$mejorJugador->resultado : 0)),
-                        'diferencia_goles' => (int)$datos->goles_favor - (!empty($mejorJugador) and ($item->id_grupo_equipo != $mejorJugador->id_grupo_equipo)) ? (int)$mejorJugador->resultado : 0,
+                        'goles_contra' => ((int)$datos->goles_contra + ((!empty($mejorJugador) and ($item->id_grupo_equipo != $mejorJugador->id_grupo_equipo)) ? ((int)$mejorJugador->resultado || 0) : 0)),
+                        'diferencia_goles' => ((int)$datos->goles_favor - ((!empty($mejorJugador) and ($item->id_grupo_equipo != $mejorJugador->id_grupo_equipo)) ? ((int)$mejorJugador->resultado || 0) : 0)),
                         // 'puntos' => $puntos,
                         'updated_at' => $fecha_reg
                     ]);
