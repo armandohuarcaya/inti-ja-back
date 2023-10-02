@@ -70,7 +70,8 @@ class IntipazData
         if (!empty($id_categoria)) {
             $q->where('a.id_categoria', '=', $id_categoria);
         }
-        $q->orderBy('a.id_grupo_equipo', 'asc');
+        $q->orderBy('a.puntos', 'desc');
+        $q->orderBy('a.diferencia_goles', 'desc');
         $data = $q->get();
 
         $datar = array();
