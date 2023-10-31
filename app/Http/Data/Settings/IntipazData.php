@@ -583,4 +583,50 @@ class IntipazData
     //     }
     //     return $response;
     // }
+    public static function saveAsistenciaBoda($request, $fecha_reg)
+    {
+        $nombre = $request->nombre;
+        $celular = $request->celular;
+
+        $count = DB::table('boda_asistencias')->where('celular', '=', $celular)->count();
+        if ($count == 0) {
+            $id_asistencia =  Helpers::correlativo('boda_asistencias', 'id_asistencia');
+            $numero = $id_asistencia < 10 ? ('0'.$id_asistencia) : $id_asistencia;
+            $codigo = 'RYC'.$numero;
+            $savegp = DB::table('boda_asistencias')->insert([
+                'id_asistencia' => $id_asistencia,
+                'nombre' => $nombre,
+                'celular' => $celular,
+                'codigo' => $codigo,
+            ]);
+            if ($savegp) {
+                $response = [
+                    'success' => true,
+                    'message' => 'Ingresado satisfactoriamente',
+                    'data' => $codigo
+                ];
+            } else {
+                $response = [
+                    'success' => false,
+                    'message' => 'No se pudo registrar por completo',
+                    'data' => $codigo
+                ];
+            }
+        }  else {
+            $response = [
+                'success' => false,
+                'message' => 'El celular ya esta registrado',
+                'data' => $celular
+            ];
+        }
+        return $response;
+    }
+    public static function showCodeInvitation($request, $codigo)
+    {
+        // $codigo = $request->codigo;
+
+        $data = DB::table('boda_asistencias')->where('codigo', '=', $codigo)->select('nombre', 'celular', 'codigo')->first();
+        
+        return $data;
+    }
 }

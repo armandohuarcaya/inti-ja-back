@@ -230,4 +230,37 @@ class IntipazController
             return $this->error(Helpers::msgError($e), 400);
         }
     }
+    // Para boda
+    public function saveAsistenciaBoda(Request $request)
+    {
+        $date = Carbon::now();
+        $fecha_reg = $date->format('Y-m-d H:m:s');
+        DB::beginTransaction();
+        try {
+            $result = IntipazData::saveAsistenciaBoda($request, $fecha_reg);
+            if($result['success']) {
+                DB::commit();
+                return $this->ok($result['data'], $result['message']);
+            }else{
+                DB::rollBack();
+                return $this->information('', $result['message'], 202);
+            }
+        } catch (Throwable $e) {
+            DB::rollBack();
+            return $this->error(Helpers::msgError($e), 400);
+        }
+    }
+    public function showCodeInvitation(Request $request, $codigo)
+    {
+        try {
+            $object = IntipazData::showCodeInvitation($request, $codigo);
+            if (!empty($object)) {
+                return $this->ok($object);
+            } else {
+                return $this->information('', 'No hay información', 202);
+            }
+        } catch (Throwable $e) {
+            return $this->error(Helpers::msgError($e), 400);
+        }
+    }
 }
