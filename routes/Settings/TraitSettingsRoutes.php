@@ -29,5 +29,10 @@ trait TraitSettingsRoutes
             Route::post('groups', [IntipazController::class, 'saveGroup']);
             Route::post('group-equipe', [IntipazController::class, 'saveGroupsEquipe']);
         });
+        Route::group(['prefix' => 'boda', 'namespace' => 'Settings'], function () {
+            // Boda temporal
+            Route::post('asistence', [IntipazController::class, 'saveAsistenciaBoda']);
+            Route::get('asistence/{codigo}', [IntipazController::class, 'showCodeInvitation']);
+        });
     }
 }
