@@ -592,7 +592,7 @@ class IntipazData
         if ($count == 0) {
             $id_asistencia =  Helpers::correlativo('boda_asistencias', 'id_asistencia');
             $numero = $id_asistencia < 10 ? ('0'.$id_asistencia) : $id_asistencia;
-            $codigo = 'RYC'.$numero;
+            $codigo = 'R&C'.$numero;
             $savegp = DB::table('boda_asistencias')->insert([
                 'id_asistencia' => $id_asistencia,
                 'nombre' => $nombre,
