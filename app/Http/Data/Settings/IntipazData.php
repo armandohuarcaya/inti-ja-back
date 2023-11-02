@@ -598,6 +598,7 @@ class IntipazData
                 'nombre' => $nombre,
                 'celular' => $celular,
                 'codigo' => $codigo,
+                'created_at' => $fecha_reg,
             ]);
             if ($savegp) {
                 $response = [
