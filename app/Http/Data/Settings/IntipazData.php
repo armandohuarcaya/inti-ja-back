@@ -588,38 +588,38 @@ class IntipazData
         $nombre = $request->nombre;
         $celular = $request->celular;
 
-        $count = DB::table('boda_asistencias')->where('celular', '=', $celular)->count();
-        if ($count == 0) {
-            $id_asistencia =  Helpers::correlativo('boda_asistencias', 'id_asistencia');
-            $numero = $id_asistencia < 10 ? ('0'.$id_asistencia) : $id_asistencia;
-            $codigo = 'R&C'.$numero;
-            $savegp = DB::table('boda_asistencias')->insert([
-                'id_asistencia' => $id_asistencia,
-                'nombre' => $nombre,
-                'celular' => $celular,
-                'codigo' => $codigo,
-                'created_at' => $fecha_reg,
-            ]);
-            if ($savegp) {
-                $response = [
-                    'success' => true,
-                    'message' => 'Ingresado satisfactoriamente',
-                    'data' => $codigo
-                ];
-            } else {
-                $response = [
-                    'success' => false,
-                    'message' => 'No se pudo registrar por completo',
-                    'data' => $codigo
-                ];
-            }
-        }  else {
+        // $count = DB::table('boda_asistencias')->where('celular', '=', $celular)->count();
+        // if ($count == 0) {
+        $id_asistencia =  Helpers::correlativo('boda_asistencias', 'id_asistencia');
+        $numero = $id_asistencia < 10 ? ('0'.$id_asistencia) : $id_asistencia;
+        $codigo = 'R&C'.$numero;
+        $savegp = DB::table('boda_asistencias')->insert([
+            'id_asistencia' => $id_asistencia,
+            'nombre' => $nombre,
+            'celular' => $celular,
+            'codigo' => $codigo,
+            'created_at' => $fecha_reg,
+        ]);
+        if ($savegp) {
+            $response = [
+                'success' => true,
+                'message' => 'Ingresado satisfactoriamente',
+                'data' => $codigo
+            ];
+        } else {
             $response = [
                 'success' => false,
-                'message' => 'El celular ya esta registrado',
-                'data' => $celular
+                'message' => 'No se pudo registrar por completo',
+                'data' => $codigo
             ];
         }
+        // }  else {
+        //     $response = [
+        //         'success' => false,
+        //         'message' => 'El celular ya esta registrado',
+        //         'data' => $celular
+        //     ];
+        // }
         return $response;
     }
     public static function showCodeInvitation($request, $codigo)
